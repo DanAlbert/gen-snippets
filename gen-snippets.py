@@ -5,9 +5,8 @@ import sys
 from datetime import date, timedelta
 
 
-def get_last_week_range():
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
+def get_week_range(week_of):
+    monday = week_of - timedelta(days=week_of.weekday())
     return monday - timedelta(weeks=1), monday - timedelta(days=1)
 
 
@@ -49,7 +48,14 @@ def main():
         sys.exit('userconfig.py not found')
 
     user = userconfig.username
-    monday, sunday = get_last_week_range()
+    if len(sys.argv) == 2:
+        year, month, day = [int(s) for s in sys.argv[1].split('-')]
+        week_of = date(year, month, day)
+    elif len(sys.argv) == 1:
+        week_of = date.today()
+    else:
+        sys.exit('usage: python gen-snippets.py [YYYY-MM-DD]')
+    monday, sunday = get_week_range(week_of)
 
     query = 'owner:{}+after:{}+before:{}'.format(user, monday, sunday)
     response = gerrit.call('/changes/?q={}'.format(query))
