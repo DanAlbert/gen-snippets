@@ -7,7 +7,7 @@ from datetime import date, timedelta
 
 def get_week_range(week_of):
     monday = week_of - timedelta(days=week_of.weekday())
-    return monday - timedelta(weeks=1), monday - timedelta(days=1)
+    return monday, monday + timedelta(days=6)
 
 
 def change_url(change):
@@ -38,7 +38,7 @@ def make_snippets(projects):
                 subject = subject[:-1]
             url = change_url(change)
             lines.append('    * {}: {}'.format(subject, url))
-    return '\n'.join(lines)
+    return '\n'.join(lines).replace('_', r'\_')
 
 
 def main():
@@ -52,7 +52,7 @@ def main():
         year, month, day = [int(s) for s in sys.argv[1].split('-')]
         week_of = date(year, month, day)
     elif len(sys.argv) == 1:
-        week_of = date.today()
+        week_of = date.today() - timedelta(weeks=1)
     else:
         sys.exit('usage: python gen-snippets.py [YYYY-MM-DD]')
     monday, sunday = get_week_range(week_of)
