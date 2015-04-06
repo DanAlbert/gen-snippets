@@ -28,19 +28,31 @@ def pretty_project_name(project_name):
     return project_name
 
 
-def make_snippets(projects):
+def format_change(change):
+    subject = change['subject']
+    if subject.endswith('.'):
+        subject = subject[:-1]
+    url = change_url(change)
+    status = ''
+    if change['status'] == 'ABANDONED':
+        status = 'ABANDONED '
+    return '    * {}{}: {}'.format(status, subject, url)
+
+
+def format_changes(header, changes):
     lines = []
+    lines.append('* {}:'.format(header))
+    for change in changes:
+        lines.append(format_change(change))
+    return lines
+
+
+def make_snippets(topics, projects):
+    lines = []
+    for topic, changes in topics.items():
+        lines.extend(format_changes(topic, changes))
     for project, changes in projects.items():
-        lines.append('* {}:'.format(pretty_project_name(project)))
-        for change in changes:
-            subject = change['subject']
-            if subject.endswith('.'):
-                subject = subject[:-1]
-            url = change_url(change)
-            status = ''
-            if change['status'] == 'ABANDONED':
-                status = 'ABANDONED '
-            lines.append('    * {}{}: {}'.format(status, subject, url))
+        lines.extend(format_changes(pretty_project_name(project), changes))
     return '\n'.join(lines).replace('_', r'\_')
 
 
@@ -64,12 +76,17 @@ def main():
     response = gerrit.call('/changes/?q={}'.format(query))
     changes = json.loads(response)
 
-    project_names = {c['project'] for c in changes}
+    project_names = {c['project'] for c in changes if 'topic' not in c}
+    topic_names = {c['topic'] for c in changes if 'topic' in c}
+    topics = {tn: [] for tn in topic_names}
     projects = {pn: [] for pn in project_names}
     for change in changes:
-        projects[change['project']].append(change)
+        if 'topic' in change and change['topic'] != '':
+            topics[change['topic']].append(change)
+        else:
+            projects[change['project']].append(change)
 
-    print make_snippets(projects)
+    print make_snippets(topics, projects)
 
 
 if __name__ == '__main__':
