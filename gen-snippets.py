@@ -37,7 +37,10 @@ def make_snippets(projects):
             if subject.endswith('.'):
                 subject = subject[:-1]
             url = change_url(change)
-            lines.append('    * {}: {}'.format(subject, url))
+            status = ''
+            if change['status'] == 'ABANDONED':
+                status = 'ABANDONED '
+            lines.append('    * {}{}: {}'.format(status, subject, url))
     return '\n'.join(lines).replace('_', r'\_')
 
 
