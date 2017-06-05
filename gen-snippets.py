@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import gerrit
 import json
 import sys
